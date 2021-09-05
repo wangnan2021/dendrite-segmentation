@@ -16,12 +16,23 @@ norm_layer = partial(SynchronizedBatchNorm2d, momentum=settings.BN_MOM)
 
 class Bottleneck(nn.Module):
     expansion = 4
-    def __init__(self, inplanes, planes, stride=1, dilation=1,
-                 downsample=None, previous_dilation=1):
+
+    def __init__(self,
+                 inplanes,
+                 planes,
+                 stride=1,
+                 dilation=1,
+                 downsample=None,
+                 previous_dilation=1):
         super().__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, 1, bias=False)
         self.bn1 = norm_layer(planes)
-        self.conv2 = nn.Conv2d(planes, planes, 3, stride, dilation, dilation, 
+        self.conv2 = nn.Conv2d(planes,
+                               planes,
+                               3,
+                               stride,
+                               dilation,
+                               dilation,
                                bias=False)
         self.bn2 = norm_layer(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, 1, bias=False)
@@ -60,11 +71,9 @@ class ResNet(nn.Module):
         super().__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False),
-            norm_layer(64),
-            nn.ReLU(inplace=True),
+            norm_layer(64), nn.ReLU(inplace=True),
             nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-            norm_layer(64),
-            nn.ReLU(inplace=True),
+            norm_layer(64), nn.ReLU(inplace=True),
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1, bias=False))
 
         self.bn1 = norm_layer(self.inplanes)
@@ -75,13 +84,24 @@ class ResNet(nn.Module):
 
         if stride == 16:
             self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-            self.layer4 = self._make_layer(
-                    block, 512, layers[3], stride=1, dilation=2, grids=[1,2,4])
+            self.layer4 = self._make_layer(block,
+                                           512,
+                                           layers[3],
+                                           stride=1,
+                                           dilation=2,
+                                           grids=[1, 2, 4])
         elif stride == 8:
-            self.layer3 = self._make_layer(
-                    block, 256, layers[2], stride=1, dilation=2)
-            self.layer4 = self._make_layer(
-                    block, 512, layers[3], stride=1, dilation=4, grids=[1,2,4])
+            self.layer3 = self._make_layer(block,
+                                           256,
+                                           layers[2],
+                                           stride=1,
+                                           dilation=2)
+            self.layer4 = self._make_layer(block,
+                                           512,
+                                           layers[3],
+                                           stride=1,
+                                           dilation=4,
+                                           grids=[1, 2, 4])
 
         self.avgpool = nn.AvgPool2d(7, stride=1)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
@@ -94,37 +114,53 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 if m.bias is not None:
                     m.bias.data.zero_()
- 
- 
-    def _make_layer(self, block, planes, blocks, stride=1, dilation=1, 
+
+    def _make_layer(self,
+                    block,
+                    planes,
+                    blocks,
+                    stride=1,
+                    dilation=1,
                     grids=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion, 
-                          kernel_size=1, stride=stride, bias=False),
-                norm_layer(planes * block.expansion))
+                nn.Conv2d(self.inplanes,
+                          planes * block.expansion,
+                          kernel_size=1,
+                          stride=stride,
+                          bias=False), norm_layer(planes * block.expansion))
 
         layers = []
         if grids is None:
             grids = [1] * blocks
 
         if dilation == 1 or dilation == 2:
-            layers.append(block(self.inplanes, planes, stride, dilation=1, 
-                                downsample=downsample, 
-                                previous_dilation=dilation))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      stride,
+                      dilation=1,
+                      downsample=downsample,
+                      previous_dilation=dilation))
         elif dilation == 4:
-            layers.append(block(self.inplanes, planes, stride, dilation=2, 
-                                downsample=downsample, 
-                                previous_dilation=dilation))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      stride,
+                      dilation=2,
+                      downsample=downsample,
+                      previous_dilation=dilation))
         else:
             raise RuntimeError('=> unknown dilation size: {}'.format(dilation))
 
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, 
-                                dilation=dilation*grids[i], 
-                                previous_dilation=dilation))
+            layers.append(
+                block(self.inplanes,
+                      planes,
+                      dilation=dilation * grids[i],
+                      previous_dilation=dilation))
 
         return nn.Sequential(*layers)
 
@@ -167,12 +203,15 @@ def resnet(n_layers, stride):
 
 class ConvBNReLU(nn.Module):
     '''Module for the Conv-BN-ReLU tuple.'''
-
     def __init__(self, c_in, c_out, kernel_size, stride, padding, dilation):
         super(ConvBNReLU, self).__init__()
-        self.conv = nn.Conv2d(
-                c_in, c_out, kernel_size=kernel_size, stride=stride, 
-                padding=padding, dilation=dilation, bias=False)
+        self.conv = nn.Conv2d(c_in,
+                              c_out,
+                              kernel_size=kernel_size,
+                              stride=stride,
+                              padding=padding,
+                              dilation=dilation,
+                              bias=False)
         self.bn = norm_layer(c_out)
         self.relu = nn.ReLU(inplace=True)
 
@@ -196,15 +235,14 @@ class EMAU(nn.Module):
         self.stage_num = stage_num
 
         mu = torch.Tensor(1, c, k)
-        mu.normal_(0, math.sqrt(2. / k))    # Init with Kaiming Norm.
+        mu.normal_(0, math.sqrt(2. / k))  # Init with Kaiming Norm.
         mu = self._l2norm(mu, dim=1)
         self.register_buffer('mu', mu)
 
         self.conv1 = nn.Conv2d(c, c, 1)
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(c, c, 1, bias=False),
-            norm_layer(c))        
-        
+        self.conv2 = nn.Sequential(nn.Conv2d(c, c, 1, bias=False),
+                                   norm_layer(c))
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -213,7 +251,6 @@ class EMAU(nn.Module):
                 m.weight.data.fill_(1)
                 if m.bias is not None:
                     m.bias.data.zero_()
- 
 
     def forward(self, x):
         idn = x
@@ -222,20 +259,20 @@ class EMAU(nn.Module):
 
         # The EM Attention
         b, c, h, w = x.size()
-        x = x.view(b, c, h*w)               # b * c * n
-        mu = self.mu.repeat(b, 1, 1)        # b * c * k
+        x = x.view(b, c, h * w)  # b * c * n
+        mu = self.mu.repeat(b, 1, 1)  # b * c * k
         with torch.no_grad():
             for i in range(self.stage_num):
-                x_t = x.permute(0, 2, 1)    # b * n * c
-                z = torch.bmm(x_t, mu)      # b * n * k
-                z = F.softmax(z, dim=2)     # b * n * k
+                x_t = x.permute(0, 2, 1)  # b * n * c
+                z = torch.bmm(x_t, mu)  # b * n * k
+                z = F.softmax(z, dim=2)  # b * n * k
                 z_ = z / (1e-6 + z.sum(dim=1, keepdim=True))
-                mu = torch.bmm(x, z_)       # b * c * k
+                mu = torch.bmm(x, z_)  # b * c * k
                 mu = self._l2norm(mu, dim=1)
 
-        z_t = z.permute(0, 2, 1)            # b * k * n
-        x = mu.matmul(z_t)                  # b * c * n
-        x = x.view(b, c, h, w)              # b * c * h * w
+        z_t = z.permute(0, 2, 1)  # b * k * n
+        x = mu.matmul(z_t)  # b * c * n
+        x = x.view(b, c, h, w)  # b * c * h * w
         x = F.relu(x, inplace=True)
 
         # The second 1x1 conv
@@ -266,25 +303,19 @@ class EMANet(nn.Module):
     def __init__(self, n_classes, n_layers):
         super().__init__()
         backbone = resnet(n_layers, settings.STRIDE)
-        self.extractor = nn.Sequential(
-            backbone.conv1,
-            backbone.bn1,
-            backbone.relu,
-            backbone.maxpool,
-            backbone.layer1,
-            backbone.layer2,
-            backbone.layer3,
-            backbone.layer4)
+        self.extractor = nn.Sequential(backbone.conv1, backbone.bn1,
+                                       backbone.relu, backbone.maxpool,
+                                       backbone.layer1, backbone.layer2,
+                                       backbone.layer3, backbone.layer4)
 
         self.fc0 = ConvBNReLU(2048, 512, 3, 1, 1, 1)
         self.emau = EMAU(512, 64, settings.STAGE_NUM)
-        self.fc1 = nn.Sequential(
-            ConvBNReLU(512, 256, 3, 1, 1, 1),
-            nn.Dropout2d(p=0.1))
+        self.fc1 = nn.Sequential(ConvBNReLU(512, 256, 3, 1, 1, 1),
+                                 nn.Dropout2d(p=0.1))
         self.fc2 = nn.Conv2d(256, n_classes, 1)
 
         # Put the criterion inside the model to make GPU load balanced
-        self.crit = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL, 
+        self.crit = CrossEntropyLoss2d(ignore_index=settings.IGNORE_LABEL,
                                        reduction='none')
 
     def forward(self, img, lbl=None, size=None):
@@ -308,7 +339,8 @@ class EMANet(nn.Module):
 class CrossEntropyLoss2d(nn.Module):
     def __init__(self, weight=None, reduction='none', ignore_index=-1):
         super(CrossEntropyLoss2d, self).__init__()
-        self.nll_loss = nn.NLLLoss(weight, reduction=reduction, 
+        self.nll_loss = nn.NLLLoss(weight,
+                                   reduction=reduction,
                                    ignore_index=ignore_index)
 
     def forward(self, inputs, targets):
