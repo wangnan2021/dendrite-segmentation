@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from unet_parts import *
 
+
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes):
         super(UNet, self).__init__()
@@ -19,17 +20,18 @@ class UNet(nn.Module):
         self.outc = outconv(64, n_classes)
 
     def forward(self, x):
-        x1 = self.inc(x)#64
-        x2 = self.down1(x1)#128
-        x3 = self.down2(x2)#256
-        x4 = self.down3(x3)#512
-        x5 = self.down4(x4)#1024
-        x = self.up1(x5, x4)#512
-        x = self.up2(x, x3)#256
-        x = self.up3(x, x2)#128
-        x = self.up4(x, x1)#64
+        x1 = self.inc(x)  #64
+        x2 = self.down1(x1)  #128
+        x3 = self.down2(x2)  #256
+        x4 = self.down3(x3)  #512
+        x5 = self.down4(x4)  #1024
+        x = self.up1(x5, x4)  #512
+        x = self.up2(x, x3)  #256
+        x = self.up3(x, x2)  #128
+        x = self.up4(x, x1)  #64
         x = self.outc(x)
         return x
+
 
 class UNetv1(nn.Module):
     def __init__(self, n_channels, n_classes):
@@ -46,22 +48,21 @@ class UNetv1(nn.Module):
         self.outc = outconv(32, n_classes)
 
     def forward(self, x):
-        x1 = self.inc(x)#64
-        x2 = self.down1(x1)#128
-        x3 = self.down2(x2)#256
-        x4 = self.down3(x3)#512
-        x5 = self.down4(x4)#1024
-        x = self.up1(x5, x4)#512
-        x = self.up2(x, x3)#256
-        x = self.up3(x, x2)#128
-        x = self.up4(x, x1)#64
+        x1 = self.inc(x)  #64
+        x2 = self.down1(x1)  #128
+        x3 = self.down2(x2)  #256
+        x4 = self.down3(x3)  #512
+        x5 = self.down4(x4)  #1024
+        x = self.up1(x5, x4)  #512
+        x = self.up2(x, x3)  #256
+        x = self.up3(x, x2)  #128
+        x = self.up4(x, x1)  #64
         x = self.outc(x)
         return x
 
 
-
 if __name__ == "__main__":
-    img = torch.rand(1,3, 256,256).cuda()
+    img = torch.rand(1, 3, 256, 256).cuda()
     model = UNetv1(n_channels=3, n_classes=1).cuda().eval()
     # # print(model)
     print(sum(p.numel() for p in model.parameters()))

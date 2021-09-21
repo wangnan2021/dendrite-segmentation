@@ -16,20 +16,20 @@ for epoch in range(200):
         pass
     scheduler.step()
     print(scheduler.get_lr())
-    if (epoch+1) % 50 == 0:
+    if (epoch + 1) % 50 == 0:
         print('Reset scheduler')
         optimizer = optim.SGD(model.parameters(), lr=max_lr)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, scheduler_steps)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, scheduler_steps)
     losslist.append(scheduler.get_lr())
 
-    plt.figure(figsize=(15,5))
+    plt.figure(figsize=(15, 5))
     name = "train"
-    plt.plot(range(len(losslist)),losslist, label=f'train {name}')
+    plt.plot(range(len(losslist)), losslist, label=f'train {name}')
     plt.plot(range(200), range(1), label=f'val {name}')
-    plt.title(f'{name} plot'); plt.xlabel('Epoch'); plt.ylabel(f'{name}')    
+    plt.title(f'{name} plot')
+    plt.xlabel('Epoch')
+    plt.ylabel(f'{name}')
     plt.legend()
     plt.savefig("./my.png")
     plt.close()
-
-
-
